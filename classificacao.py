@@ -20,6 +20,7 @@ plt.ylabel("Aprovado")
 # %%
 from sklearn import linear_model
 from sklearn import tree
+from sklearn import naive_bayes
 
 #%%
 
@@ -42,11 +43,16 @@ arvore_full_predict = arvore_full.predict(df[["cerveja"]].drop_duplicates())
 arvore_full_proba = arvore_full.predict_proba(df[["cerveja"]].drop_duplicates())[:,1]
 
 #%%
-#%%
 arvore_d2 = tree.DecisionTreeClassifier(random_state=42, max_depth=2)
 arvore_d2.fit(df[["cerveja"]], df["aprovado"])
 arvore_d2_predict = arvore_d2.predict(df[["cerveja"]].drop_duplicates())
 arvore_d2_proba = arvore_d2.predict_proba(df[["cerveja"]].drop_duplicates())[:,1]
+
+#%%
+nb = naive_bayes.GaussianNB()
+nb.fit(df[["cerveja"]], df["aprovado"])
+nb_predict = nb.predict(df[["cerveja"]].drop_duplicates())
+nb_proba = nb.predict_proba(df[["cerveja"]].drop_duplicates())[:,1]
 
 # %%
 plt.figure(dpi=400)
@@ -58,8 +64,8 @@ plt.ylabel("Aprovado")
 plt.plot(df["cerveja"].drop_duplicates(), reg_predict, color="tomato")
 plt.plot(df["cerveja"].drop_duplicates(), reg_prob, color="red")
 
-#plt.plot(df["cerveja"].drop_duplicates(), arvore_full_predict, color="g")
-#plt.plot(df["cerveja"].drop_duplicates(), arvore_full_proba, color="magenta")
+plt.plot(df["cerveja"].drop_duplicates(), nb_predict, color="g")
+plt.plot(df["cerveja"].drop_duplicates(), nb_proba, color="magenta")
 
 plt.plot(df["cerveja"].drop_duplicates(), arvore_d2_predict, color="blue")
 plt.plot(df["cerveja"].drop_duplicates(), arvore_d2_proba, color="black")
@@ -67,9 +73,10 @@ plt.plot(df["cerveja"].drop_duplicates(), arvore_d2_proba, color="black")
 plt.hlines(0.5, xmin=1, xmax=9, linestyles="--", colors='black')
 
 plt.legend(["Observação", "Reg Predct", "Reg Proba",
-            #"Árvore Full Predict",
-           # "Árvore Full Proba",
+            "Naive Bayes Predict",
+           "Naive Bayes Proba",
             "Árvore D2 Predict",
             "Árvore D2 Proba"])
+
 
 # %%
