@@ -144,3 +144,6 @@ plt.legend([f"Árvore: {auc_arvore:.2f}",
 plt.hist(df_predict["proba_arvore"])
 
 # %%
+pd.Series({"model": reg, "features": features}).to_pickle("model_feliz.pkl")
+
+# %%
