@@ -72,26 +72,26 @@ best_features = (feature_importances[feature_importances["acum."] < 0.96]["index
 
 best_features
 
+X_train[best_features]
+
 # %%
 # MODIFY
 
-from feature_engine import discretisation
+from feature_engine import discretisation, encoding
+from sklearn import pipeline
 
-tree_discretization = discretisation.DecisionTreeDiscretiser(variables=best_features,
-                                                             regression=False,
-                                                             bin_output="bin_number",
-                                                             cv=3
-                                                            )
+# DISCRETIZAR
+tree_discretization = discretisation.DecisionTreeDiscretiser(
+    variables=best_features,
+    regression=False,
+    bin_output="bin_number",
+    cv=3
+)
 
-# %%
-tree_discretization.fit(X_train[best_features], y_train)
 
-# %%
-X_train.head()
-
-# %%
-X_train_transform = tree_discretization.transform(X_train[best_features])
-X_train_transform
+# ONEHOT
+onehot = encoding.OneHotEncoder(variables=best_features,
+                                ignore_format=True) 
 
 # %%
 # MODEL
@@ -99,13 +99,22 @@ from sklearn import linear_model
 
 reg = linear_model.LogisticRegression(penalty=None, random_state=42,
                                       max_iter=10000)
-reg.fit(X_train_transform, y_train)
+
+model_pipeline = pipeline.Pipeline(
+    steps=[
+        ("Discretizar", tree_discretization),
+        ("Onehot", onehot),
+        ("Model", reg)
+    ]
+)
+
+model_pipeline.fit(X_train, y_train)
 
 # %%
 from sklearn import metrics
 
-y_train_predict = reg.predict(X_train_transform)
-y_train_proba = reg.predict_proba(X_train_transform)[:,1]
+y_train_predict = model_pipeline.predict(X_train)
+y_train_proba = model_pipeline.predict_proba(X_train)[:,1]
 
 acc_train = metrics.accuracy_score(y_train, y_train_predict)
 auc_train = metrics.roc_auc_score(y_train, y_train_proba)
@@ -113,10 +122,8 @@ print(f"Acurácia Treino {acc_train}")
 print(f"AUC Treino:", auc_train)
 
 # %%
-X_test_transform = tree_discretization.transform(X_test[best_features])
-
-y_test_predict = reg.predict(X_test_transform)
-y_test_proba = reg.predict_proba(X_test_transform)[:,1]
+y_test_predict = model_pipeline.predict(X_test)
+y_test_proba = model_pipeline.predict_proba(X_test)[:,1]
 
 acc_test = metrics.accuracy_score(y_test, y_test_predict)
 auc_test = metrics.roc_auc_score(y_test, y_test_proba)
@@ -124,10 +131,8 @@ print(f"Acurácia Test {acc_test}")
 print(f"AUC Test:", auc_test)
 
 # %%
-oot_transform = tree_discretization.transform(oot[best_features])
-
-y_oot_predict = reg.predict(oot_transform)
-y_oot_proba = reg.predict_proba(oot_transform)[:,1]
+y_oot_predict = model_pipeline.predict(oot[features])
+y_oot_proba = model_pipeline.predict_proba(oot[features])[:,1]
 
 acc_oot = metrics.accuracy_score(oot[target], y_oot_predict)
 auc_oot = metrics.roc_auc_score(oot[target], y_oot_proba)
